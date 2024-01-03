@@ -16,7 +16,7 @@ internal class ImageEditor : IImageEditor
         _magickImage = new MagickImage(filePath);
     }
     
-    public void ConvertImage(ImageFormatsEnum ext)
+    public void ConvertImage(ImageFormatsEnum? ext)
     {
         _magickImage.Format = ext switch
         {
@@ -33,11 +33,13 @@ internal class ImageEditor : IImageEditor
         var info = new FileInfo(_filePath);
         var optimizer = new ImageOptimizer();
         optimizer.LosslessCompress(info);
+        _magickImage.Quality = 70;
     }
 
-    public ImageEditingFileInfoModel GetFileInfo()
+    public ImageEditingFileInfoModel GetFileInfo(string? filePath)
     {
-        var info = new FileInfo(_filePath);
+        var info = new FileInfo(filePath ?? _filePath);
+        info.Refresh();
         return new ImageEditingFileInfoModel()
         {
             FileLength = $"{(info.Length / 1000).ToString()} kB",

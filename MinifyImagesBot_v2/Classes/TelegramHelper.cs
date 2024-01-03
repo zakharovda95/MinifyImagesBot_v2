@@ -119,9 +119,10 @@ internal class TelegramHelper : ITelegramHelper
         try
         {
             await using Stream fileStream = StreamFile.OpenRead(filePath);
+            var fileName = filePath.Split("/").Last();
             await _botClient.SendDocumentAsync(
                 chatId: _chatId!,
-                document: InputFile.FromStream(fileStream),
+                document: InputFile.FromStream(fileStream, fileName),
                 replyToMessageId: !replyMessage ? null : _update?.Message?.MessageId,
                 caption: caption,
                 cancellationToken: _cancellationToken

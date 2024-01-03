@@ -18,13 +18,23 @@ internal sealed class TelegramBot : ITelegramBot
         var text = update.Message?.Text;
         var photo = update.Message?.Photo;
         var document = update.Message?.Document;
+        var sticker = update.Message?.Sticker;
         var caption = update.Message?.Caption;
         var telegramHelper =
             new TelegramHelper(botClient: botClient, update: update, cancellationToken: cancellationToken);
 
-        if (text is not null) await HandleText(text, telegramHelper: telegramHelper);
-        if (photo is not null) await HandlePhoto(telegramHelper: telegramHelper);
-        if (document is not null) await HandleDocument(document: document, caption: caption, telegramHelper: telegramHelper);
+        if (text is not null && sticker is null) await HandleText(text, telegramHelper: telegramHelper);
+        else if (photo is not null) await HandlePhoto(telegramHelper: telegramHelper);
+        else if (document is not null)
+            await HandleDocument(document: document, caption: caption, telegramHelper: telegramHelper);
+        else if (sticker is not null)
+        {
+            await telegramHelper.SendSystemMessage(
+                message: ResponseSystemTextMessagesData.IsWebp,
+                type: SystemMessagesTypesEnum.Default,
+                replyMessage: true
+            );
+        }
     }
 
     private async Task OnError(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)
@@ -71,7 +81,7 @@ internal sealed class TelegramBot : ITelegramBot
     private static async Task HandleDocument(Document document, string? caption, ITelegramHelper telegramHelper)
     {
         if (document.MimeType is null || !document.MimeType.StartsWith("image/")) return;
-        
+
         var filePath = FileHelper.CreateFilePath(document: document);
         var res = await telegramHelper.DownloadFileAndSave(filePath: filePath, fileId: document.FileId);
 
@@ -84,7 +94,7 @@ internal sealed class TelegramBot : ITelegramBot
             );
             return;
         }
-        
+
         await telegramHelper.SendSystemMessage(
             message: ResponseSystemTextMessagesData.StartFormatting,
             type: SystemMessagesTypesEnum.Default,
@@ -92,17 +102,36 @@ internal sealed class TelegramBot : ITelegramBot
         );
 
         var result = EditImage(filePath: filePath, caption: caption, telegramHelper: telegramHelper);
-        var sendingCaption = 
-            $"Размер: {result.FileInfoBefore.FileLength} --> {result.FileInfoAfter.FileLength}; \n Формат: {result.FileInfoBefore.FileExt} --> {result.FileInfoAfter.FileExt}";
-        await telegramHelper.SendFile(filePath: result.FilePath, caption: sendingCaption, replyMessage: true);
-        File.Delete(result.FilePath);
+
+        if (!result.IsSuccess)
+        {
+            await telegramHelper.SendSystemMessage(
+                message: ResponseSystemTextMessagesData.WrongFormat,
+                type: SystemMessagesTypesEnum.Error,
+                replyMessage: true
+            );
+            File.Delete(filePath);
+            return;
+        }
+        
+        var sendingCaption =
+            $"Размер: {result.FileInfoBefore?.FileLength} --> {result.FileInfoAfter?.FileLength}; \n Формат: {result.FileInfoBefore?.FileExt} --> {result.FileInfoAfter?.FileExt}";
+        if (result.FilePath is not null)
+        {
+            await telegramHelper.SendFile(filePath: result.FilePath, caption: sendingCaption, replyMessage: true);
+            File.Delete(result.FilePath);
+            File.Delete(filePath);
+            return;
+        }
+        
         File.Delete(filePath);
     }
 
-    private static ImageEditingResultModel EditImage(string filePath, ITelegramHelper telegramHelper, string? caption = null)
+    private static ImageEditingResultModel EditImage(string filePath, ITelegramHelper telegramHelper,
+        string? caption = null)
     {
         var imageEditor = new ImageEditor(filePath: filePath);
-        ImageFormatsEnum format;
+        ImageFormatsEnum? format;
         if (caption is null) format = ImageFormatsEnum.Webp;
         else
         {
@@ -112,28 +141,36 @@ internal sealed class TelegramBot : ITelegramBot
             }
             else
             {
-                telegramHelper.SendSystemMessage(
-                    message: ResponseSystemTextMessagesData.WrongFormat,
-                    type: SystemMessagesTypesEnum.Warning,
-                    replyMessage: true
-                );
-                format = ImageFormatsEnum.Webp;
+                format = null;
             }
         }
 
-        var infoBefore = imageEditor.GetFileInfo();
-        imageEditor.MinifyImage();
-        imageEditor.ConvertImage(format);
-        var path = imageEditor.Save();
-        var infoAfter = imageEditor.GetFileInfo();
-        
-        return new ImageEditingResultModel()
+        if (format is null)
         {
-            IsSuccess = true,
-            FilePath = path,
-            FileInfoBefore = infoBefore,
-            FileInfoAfter = infoAfter,
-        };
+            return new ImageEditingResultModel()
+            {
+                IsSuccess = false,
+                FilePath = null,
+                FileInfoBefore = null,
+                FileInfoAfter = null,
+            };
+        }
+        else
+        {
+            var infoBefore = imageEditor.GetFileInfo(filePath: filePath);
+            imageEditor.MinifyImage();
+            imageEditor.ConvertImage(format);
+            var path = imageEditor.Save();
+            var infoAfter = imageEditor.GetFileInfo(filePath: path);
+
+            return new ImageEditingResultModel()
+            {
+                IsSuccess = true,
+                FilePath = path,
+                FileInfoBefore = infoBefore,
+                FileInfoAfter = infoAfter,
+            };
+        }
     }
 
     public void CreateTelegramClientAndRun(string? telegramKey)

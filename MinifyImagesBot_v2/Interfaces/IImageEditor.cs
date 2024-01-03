@@ -5,10 +5,10 @@ namespace MinifyImagesBot_v2.Interfaces;
 
 internal interface IImageEditor
 {
-    void ConvertImage(ImageFormatsEnum ext );
+    void ConvertImage(ImageFormatsEnum? ext );
     void MinifyImage();
 
-    ImageEditingFileInfoModel GetFileInfo();
+    ImageEditingFileInfoModel GetFileInfo(string? filePath);
 
     string Save();
 }

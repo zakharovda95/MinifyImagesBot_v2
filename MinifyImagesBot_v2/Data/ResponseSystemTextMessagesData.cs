@@ -9,11 +9,14 @@ internal static class ResponseSystemTextMessagesData
         "\nДля лучшей оптимизации <b>отправьте изображение файлом</b> (без сжатия)";
 
     internal static readonly string WrongFormat =
-        " \nУказан недопустимый формат \n \nДопустимые форматы: \n <b>jpg \\| jpeg \\| webp \\| png</b> \n \n Изображение <b>отформатировано по умолчанию (в WebP)</b>";
+        " \nУказан недопустимый формат \n \nДопустимые форматы: \n <b>jpg | jpeg | webp | png</b>";
 
     internal static readonly string Error =
         "\nЧто то пошло не так! \n \nПовторите попытку";
 
     internal static readonly string StartFormatting =
         "\nНачинаю форматирование!";
+    
+    internal static readonly string IsWebp =
+        "\nИзображение уже в формате <b>WebP</b> Используйте его :) \n \nЧтобы отформатировать отправьте <b>как фото (со сжатием)</b>";
 }
