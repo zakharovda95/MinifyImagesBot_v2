@@ -3,11 +3,12 @@ using MinifyImagesBot_v2.Interfaces;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
+using StreamFile = System.IO.File;
 using File = Telegram.Bot.Types.File;
 
 namespace MinifyImagesBot_v2.Classes;
 
-public class TelegramHelper : ITelegramHelper
+internal class TelegramHelper : ITelegramHelper
 {
     private readonly ITelegramBotClient _botClient;
     private readonly Update? _update;
@@ -15,7 +16,7 @@ public class TelegramHelper : ITelegramHelper
     private readonly Exception? _exception;
     private readonly long? _chatId;
 
-    public TelegramHelper(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
+    internal TelegramHelper(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
     {
         _botClient = botClient;
         _update = update;
@@ -23,7 +24,7 @@ public class TelegramHelper : ITelegramHelper
         _chatId = update.Message?.Chat.Id;
     }
 
-    public TelegramHelper(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)
+    internal TelegramHelper(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)
     {
         _botClient = botClient;
         _exception = exception;
@@ -113,8 +114,31 @@ public class TelegramHelper : ITelegramHelper
         return res;
     }
 
-    public Task SendFile(string filePath)
+    public async Task<bool> SendFile(string filePath, string? caption = null, bool replyMessage = false)
     {
-        throw new NotImplementedException();
+        try
+        {
+            await using Stream fileStream = StreamFile.OpenRead(filePath);
+            await _botClient.SendDocumentAsync(
+                chatId: _chatId!,
+                document: InputFile.FromStream(fileStream),
+                replyToMessageId: !replyMessage ? null : _update?.Message?.MessageId,
+                caption: caption,
+                cancellationToken: _cancellationToken
+            );
+
+            fileStream.Close();
+            return true;
+        }
+        catch (Exception e)
+        {
+            await SendSystemMessage(
+                message: e.Message,
+                type: SystemMessagesTypesEnum.Error,
+                replyMessage: true
+            );
+
+            return false;
+        }
     }
 }

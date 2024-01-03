@@ -3,20 +3,17 @@ namespace MinifyImagesBot_v2.Data;
 internal static class ResponseSystemTextMessagesData
 {
     internal static readonly string WrongCommand =
-        "\nНет такой комманды \n \nОписание бота /info \nИнструкция /guide";
+        "\nНет такой комманды! \n \n<b>Описание бота</b>: /info \n<b>Документация:</b> /guide";
 
     internal static readonly string ImageNotDocument =
-        "\nДля лучшей оптимизации отправьте изображение файлом (без сжатия)";
+        "\nДля лучшей оптимизации <b>отправьте изображение файлом</b> (без сжатия)";
 
     internal static readonly string WrongFormat =
-        " \nУказан недопустимый формат \n \nДопустимые форматы: \n jpg jpeg webp png";
-
-    internal static readonly string WrongOptionalParam =
-        " \nНет такой опции \n \nНа данный момент из опциональных настроек бот поддерживает только конвертирование в другой формат \nЕсли нужны новые функции напишите @zakharovda95";
+        " \nУказан недопустимый формат \n \nДопустимые форматы: \n <b>jpg \\| jpeg \\| webp \\| png</b> \n \n Изображение <b>отформатировано по умолчанию (в WebP)</b>";
 
     internal static readonly string Error =
-        "\nЧто то пошло не так\\! \n \nПовторите попытку";
+        "\nЧто то пошло не так! \n \nПовторите попытку";
 
     internal static readonly string StartFormatting =
-        "\nНачинаю форматирование";
+        "\nНачинаю форматирование!";
 }
