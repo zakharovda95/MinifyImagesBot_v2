@@ -18,5 +18,5 @@ internal static class ResponseSystemTextMessagesData
         "\nНачинаю форматирование!";
     
     internal static readonly string IsWebp =
-        "\nИзображение уже в формате <b>WebP</b> Используйте его :) \n \nЧтобы отформатировать отправьте <b>как фото (со сжатием)</b>";
+        "\nИзображение уже в формате <b>WebP</b> Используйте его :)";
 }

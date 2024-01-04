@@ -15,25 +15,33 @@ internal sealed class TelegramBot : ITelegramBot
 {
     private async Task OnUpdate(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
     {
-        var text = update.Message?.Text;
-        var photo = update.Message?.Photo;
-        var document = update.Message?.Document;
-        var sticker = update.Message?.Sticker;
-        var caption = update.Message?.Caption;
         var telegramHelper =
             new TelegramHelper(botClient: botClient, update: update, cancellationToken: cancellationToken);
-
-        if (text is not null && sticker is null) await HandleText(text, telegramHelper: telegramHelper);
-        else if (photo is not null) await HandlePhoto(telegramHelper: telegramHelper);
-        else if (document is not null)
-            await HandleDocument(document: document, caption: caption, telegramHelper: telegramHelper);
-        else if (sticker is not null)
+        try
         {
-            await telegramHelper.SendSystemMessage(
-                message: ResponseSystemTextMessagesData.IsWebp,
-                type: SystemMessagesTypesEnum.Default,
-                replyMessage: true
-            );
+            var text = update.Message?.Text;
+            var photo = update.Message?.Photo;
+            var document = update.Message?.Document;
+            var sticker = update.Message?.Sticker;
+            var caption = update.Message?.Caption;
+
+            if (text is not null && sticker is null) await HandleText(text, telegramHelper: telegramHelper);
+            else if (photo is not null) await HandlePhoto(telegramHelper: telegramHelper);
+            else if (document is not null)
+                await HandleDocument(document: document, caption: caption, telegramHelper: telegramHelper);
+            else if (sticker is not null)
+            {
+                await telegramHelper.SendSystemMessage(
+                    message: ResponseSystemTextMessagesData.IsWebp,
+                    type: SystemMessagesTypesEnum.Default,
+                    replyMessage: true
+                );
+            }
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
         }
     }
 
@@ -41,13 +49,24 @@ internal sealed class TelegramBot : ITelegramBot
     {
         var telegramHelper =
             new TelegramHelper(botClient: botClient, exception: exception, cancellationToken: cancellationToken);
-        await telegramHelper.SendSystemMessage(
-            message: ResponseSystemTextMessagesData.Error,
-            type: SystemMessagesTypesEnum.Error,
-            replyMessage: true
-        );
-        Console.WriteLine(exception.Message);
-        return;
+        try
+        {
+            await telegramHelper.SendSystemMessage(
+                message: ResponseSystemTextMessagesData.Error,
+                type: SystemMessagesTypesEnum.Error,
+                replyMessage: true
+            );
+        }
+        catch (Exception e)
+        {
+            await telegramHelper.SendSystemMessage(
+                message: ResponseSystemTextMessagesData.Error,
+                type: SystemMessagesTypesEnum.Error,
+                replyMessage: true
+            );
+            Console.WriteLine(e);
+            throw;
+        }
     }
 
     private static async void ShowReadyInfo(ITelegramBotClient telegramBotClient)
