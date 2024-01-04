@@ -15,4 +15,5 @@ internal interface ITelegramHelper
 
     Task<File?> DownloadFileAndSave(string filePath, string fileId);
     Task<bool> SendFile(string filePath, string? caption = null, bool replyMessage = false);
+    Task<bool> SendPhoto(string filePath, string? caption = null, bool replyMessage = false);
 }

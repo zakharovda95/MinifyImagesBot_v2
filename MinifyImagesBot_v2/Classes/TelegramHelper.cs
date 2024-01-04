@@ -24,13 +24,6 @@ internal class TelegramHelper : ITelegramHelper
         _chatId = update.Message?.Chat.Id;
     }
 
-    internal TelegramHelper(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)
-    {
-        _botClient = botClient;
-        _exception = exception;
-        _cancellationToken = cancellationToken;
-    }
-
     public async Task<Message?> SendBaseMessage(string? message, bool replyMessage = false)
     {
         try
@@ -73,6 +66,7 @@ internal class TelegramHelper : ITelegramHelper
             {
                 SystemMessagesTypesEnum.Error => "Системная ошибка: ",
                 SystemMessagesTypesEnum.Warning => "Системное предупреждение: ",
+                SystemMessagesTypesEnum.EditingResult => "Результат форматирования: ",
                 _ => "Системное сообщение: "
             };
 
@@ -123,6 +117,35 @@ internal class TelegramHelper : ITelegramHelper
             await _botClient.SendDocumentAsync(
                 chatId: _chatId!,
                 document: InputFile.FromStream(fileStream, fileName),
+                replyToMessageId: !replyMessage ? null : _update?.Message?.MessageId,
+                caption: caption,
+                cancellationToken: _cancellationToken
+            );
+
+            fileStream.Close();
+            return true;
+        }
+        catch (Exception e)
+        {
+            await SendSystemMessage(
+                message: e.Message,
+                type: SystemMessagesTypesEnum.Error,
+                replyMessage: true
+            );
+
+            return false;
+        }
+    }
+    
+    public async Task<bool> SendPhoto(string filePath, string? caption = null, bool replyMessage = false)
+    {
+        try
+        {
+            await using Stream fileStream = StreamFile.OpenRead(filePath);
+            var fileName = filePath.Split("/").Last();
+            await _botClient.SendPhotoAsync(
+                chatId: _chatId!,
+                photo: InputFile.FromStream(fileStream, fileName),
                 replyToMessageId: !replyMessage ? null : _update?.Message?.MessageId,
                 caption: caption,
                 cancellationToken: _cancellationToken

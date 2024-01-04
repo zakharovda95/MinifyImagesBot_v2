@@ -3,20 +3,26 @@ namespace MinifyImagesBot_v2.Data;
 internal static class ResponseSystemTextMessagesData
 {
     internal static readonly string WrongCommand =
-        "\nНет такой комманды! \n \n<b>Описание бота</b>: /info \n<b>Документация:</b> /guide";
+        "\n\ud83d\udeab Нет такой комманды! \n \n<b>Описание бота</b>: /info \n<b>Документация:</b> /guide";
 
     internal static readonly string ImageNotDocument =
-        "\nДля лучшей оптимизации <b>отправьте изображение файлом</b> (без сжатия)";
+        "\n\u26a0 Для лучшей оптимизации <b>отправьте изображение файлом</b> (без сжатия)";
 
+    internal static readonly string ErrorFormat =
+        " \n\ud83d\udeab Файл поврежден или имеет недопустимый формат \n \nДопустимые форматы: \n <b>jpg | jpeg | webp | png</b>";
+    
     internal static readonly string WrongFormat =
-        " \nУказан недопустимый формат \n \nДопустимые форматы: \n <b>jpg | jpeg | webp | png</b>";
+        " \n\u26a0 Указан недопустимый формат \n \nДопустимые форматы: \n <b>jpg | jpeg | webp | png</b>";
 
     internal static readonly string Error =
-        "\nЧто то пошло не так! \n \nПовторите попытку";
+        "\n\ud83d\udeab Что то пошло не так! \n \nПовторите попытку";
 
     internal static readonly string StartFormatting =
-        "\nНачинаю форматирование!";
+        "\n\u2705 Начинаю форматирование!";
     
     internal static readonly string IsWebp =
-        "\nИзображение уже в формате <b>WebP</b> Используйте его :)";
+        "\n\u2705 Изображение уже в формате <b>WebP</b>! Используйте его :)";
+    
+    internal static readonly string Done =
+        "\n\u2705 Успешно!";
 }

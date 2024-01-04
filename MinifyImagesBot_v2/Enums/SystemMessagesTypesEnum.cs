@@ -5,4 +5,5 @@ public enum SystemMessagesTypesEnum
     Default,
     Warning,
     Error,
+    EditingResult,
 }
