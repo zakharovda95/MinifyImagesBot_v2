@@ -23,4 +23,7 @@ var telegramKey = settings.GetTelegramKey();
 var telegramBot = new TelegramBot();
 telegramBot.CreateTelegramClientAndRun(telegramKey: telegramKey);
 
-Console.ReadKey();
+while (true)
+{
+    Thread.Sleep(10000);
+}
