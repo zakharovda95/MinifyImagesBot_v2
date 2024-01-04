@@ -31,9 +31,9 @@ internal class ImageEditor : IImageEditor
     public void MinifyImage()
     {
         var info = new FileInfo(_filePath);
+        _magickImage.Quality = 65;
         var optimizer = new ImageOptimizer();
         optimizer.LosslessCompress(info);
-        _magickImage.Quality = 70;
     }
 
     public ImageEditingFileInfoModel GetFileInfo(string? filePath)
