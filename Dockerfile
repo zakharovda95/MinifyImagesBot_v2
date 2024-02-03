@@ -15,4 +15,5 @@ RUN dotnet publish "MinifyImagesBot_v2.csproj" -c Release -o /app/publish /p:Use
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
+ENV DOTNET_ENVIRONMENT=Production
 ENTRYPOINT ["dotnet", "MinifyImagesBot_v2.dll"]
