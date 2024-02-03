@@ -9,13 +9,13 @@ internal class ImageEditor : IImageEditor
 {
     private readonly string _filePath;
     private readonly MagickImage _magickImage;
-    
+
     internal ImageEditor(string filePath)
     {
         _filePath = filePath;
         _magickImage = new MagickImage(filePath);
     }
-    
+
     public void ConvertImage(ImageFormatsEnum? ext)
     {
         _magickImage.Format = ext switch
@@ -24,16 +24,39 @@ internal class ImageEditor : IImageEditor
             ImageFormatsEnum.Jpg => MagickFormat.Jpg,
             ImageFormatsEnum.Png => MagickFormat.Png,
             ImageFormatsEnum.Webp => MagickFormat.WebP,
+            ImageFormatsEnum.Heic => MagickFormat.Heic,
             _ => _magickImage.Format
         };
     }
 
     public void MinifyImage()
     {
+        /** сжатие без потерь **/
         var info = new FileInfo(_filePath);
-        _magickImage.Quality = 65;
+        var ext = info.Extension.Replace(".", "");
         var optimizer = new ImageOptimizer();
-        optimizer.LosslessCompress(info);
+        
+        /** удаление метаданных **/
+        _magickImage.Strip();
+
+        if (string.Equals(ext, ImageFormatsEnum.Heic.ToString(), StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(ext, ImageFormatsEnum.Webp.ToString(), StringComparison.OrdinalIgnoreCase)) return;
+
+        /** Прогрессивная компрессия PNG **/
+        if (string.Equals(ext, ImageFormatsEnum.Png.ToString(), StringComparison.OrdinalIgnoreCase))
+        {
+            optimizer.LosslessCompress(info);
+            _magickImage.Settings.Interlace = Interlace.Png;
+        }
+
+        /** Прогрессивная компрессия JPEG **/
+        if (string.Equals(ext, ImageFormatsEnum.Jpeg.ToString(), StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(ext, ImageFormatsEnum.Jpg.ToString(), StringComparison.OrdinalIgnoreCase))
+        {
+            optimizer.LosslessCompress(info);
+            _magickImage.Settings.Interlace = Interlace.Jpeg;
+            _magickImage.Quality = 90;
+        }
     }
 
     public ImageEditingFileInfoModel GetFileInfo(string? filePath)
@@ -53,4 +76,4 @@ internal class ImageEditor : IImageEditor
         _magickImage.Write(filePath);
         return filePath;
     }
- }
+}

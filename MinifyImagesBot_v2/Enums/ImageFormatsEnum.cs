@@ -5,5 +5,6 @@ public enum ImageFormatsEnum
     Jpg,
     Jpeg,
     Png,
-    Webp
+    Webp,
+    Heic,
 }

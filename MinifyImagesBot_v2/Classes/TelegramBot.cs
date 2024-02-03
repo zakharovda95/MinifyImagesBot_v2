@@ -109,7 +109,7 @@ internal sealed class TelegramBot : ITelegramBot
         if (!result.IsSuccess)
         {
             await telegramHelper.SendSystemMessage(
-                message: ResponseSystemTextMessagesData.WrongFormat,
+                message: ResponseSystemTextMessagesData.ErrorFormat,
                 type: SystemMessagesTypesEnum.EditingResult,
                 replyMessage: true
             );
@@ -185,7 +185,6 @@ internal sealed class TelegramBot : ITelegramBot
         }
         catch (Exception e)
         {
-            Console.WriteLine(e);
             return new ImageEditingResultModel()
             {
                 IsSuccess = false,
