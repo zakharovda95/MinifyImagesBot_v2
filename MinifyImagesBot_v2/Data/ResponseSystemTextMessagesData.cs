@@ -3,7 +3,7 @@ namespace MinifyImagesBot_v2.Data;
 internal static class ResponseSystemTextMessagesData
 {
     internal static readonly string WrongCommand =
-        "\n\ud83d\udeab Нет такой комманды! \n \n<b>Описание бота</b>: /info \n<b>Документация:</b> /guide";
+        "\n\ud83d\udeab Нет такой комманды! \n \n<b>Описание бота</b>: /info \n<b>Документация:</b> /guide \n<b>Новости:</b> /news \n<b>Об авторе:</b> /author";
 
     internal static readonly string ImageNotDocument =
         "\n\u26a0 Для лучшей оптимизации <b>отправьте изображение файлом</b> (без сжатия)";

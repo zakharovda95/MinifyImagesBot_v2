@@ -62,6 +62,10 @@ internal sealed class TelegramBot : ITelegramBot
                 var path = FileHelper.GetGuideFilePath(fileName: "guide-image.png");
                 if (path is not null) await telegramHelper.SendPhoto(filePath: path);
                 return message;
+            case "/news":
+                return await telegramHelper.SendBaseMessage(message: ResponseTextMessagesData.News, replyMessage: true);
+            case "/author":
+                return await telegramHelper.SendBaseMessage(message: ResponseTextMessagesData.Author, replyMessage: true);
             default:
                 return await telegramHelper.SendSystemMessage(message: ResponseSystemTextMessagesData.WrongCommand,
                     type: SystemMessagesTypesEnum.Warning, replyMessage: true);
