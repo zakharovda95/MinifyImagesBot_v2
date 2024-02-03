@@ -149,15 +149,15 @@ internal sealed class TelegramBot : ITelegramBot
         try
         {
             var imageEditor = new ImageEditor(filePath: filePath);
-            ImageFormatsEnum? format;
+            /*ImageFormatsEnum? format;
             if (caption is null) format = ImageFormatsEnum.Webp;
             else
             {
                 if (Enum.TryParse(caption, ignoreCase: true, out ImageFormatsEnum formatCaption)) format = formatCaption;
                 else format = null;
-            }
+            }*/
 
-            if (format is null)
+            /*if (format is null)
             {
                 return new ImageEditingResultModel()
                 {
@@ -167,10 +167,10 @@ internal sealed class TelegramBot : ITelegramBot
                     FileInfoBefore = null,
                     FileInfoAfter = null,
                 };
-            }
+            }*/
             var infoBefore = imageEditor.GetFileInfo(filePath: filePath);
             imageEditor.MinifyImage();
-            imageEditor.ConvertImage(format);
+            //imageEditor.ConvertImage(format);
             var path = imageEditor.Save();
             var infoAfter = imageEditor.GetFileInfo(filePath: path);
 

@@ -22,7 +22,7 @@ internal static class FileHelper
         var ext = "." + image.Format;
         var fileDir = Path.Combine(CurrentDir, "Assets", "Images", "Formatted");
         if (!Directory.Exists(fileDir)) Directory.CreateDirectory(fileDir);
-        return Path.Combine(fileDir, $"{Guid.NewGuid()}{ext}");
+        return Path.Combine(fileDir, $"{Guid.NewGuid()}{ext.ToLower()}");
     }
 
     internal static string? GetGuideFilePath(string fileName)
