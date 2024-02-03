@@ -6,7 +6,7 @@ using MinifyImagesBot_v2.Interfaces;
 using MinifyImagesBot_v2.Services;
 
 var configurationBuilder = new ConfigurationBuilder();
-configurationBuilder.SetBasePath(AppDomain.CurrentDomain.BaseDirectory).AddJsonFile("appsettings.json");
+configurationBuilder.SetBasePath(AppDomain.CurrentDomain.BaseDirectory).AddJsonFile("appsettings.Production.json");
 var configuration = configurationBuilder.Build();
 
 

@@ -18,10 +18,10 @@
     </ItemGroup>
 
     <ItemGroup>
-      <None Update="appsettings.json">
+      <None Update="Assets\guide-image.png">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
-      <None Update="Assets\guide-image.png">
+      <None Update="appsettings.Production.json">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
     </ItemGroup>
