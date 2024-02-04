@@ -2,6 +2,9 @@ using ImageMagick;
 using MinifyImagesBot_v2.Enums;
 using MinifyImagesBot_v2.Interfaces;
 using MinifyImagesBot_v2.Models;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Png;
+using SixLabors.ImageSharp.Processing;
 
 namespace MinifyImagesBot_v2.Classes;
 
@@ -31,50 +34,69 @@ internal class ImageEditor : IImageEditor
 
     public void MinifyImage()
     {
-        /** сжатие без потерь **/
-        var info = new FileInfo(_filePath);
-        var ext = info.Extension.Replace(".", "");
+        using var image = Image.Load(_filePath);
         
+        var info = new FileInfo(_filePath);
+        var ext = image.Metadata.DecodedImageFormat?.Name;
+
         int CalculateQuality(byte currQuality, byte qualityDemotion, byte minQuality)
         {
             if (currQuality > 95) qualityDemotion += 15;
             else if (currQuality > 90) qualityDemotion += 10;
             else if (currQuality > 80) qualityDemotion += 5;
-            
+
             return (currQuality - qualityDemotion) < minQuality ? minQuality : currQuality - qualityDemotion;
         }
         
+        var isJpg = string.Equals(ext, ImageFormatsEnum.Jpg.ToString(), StringComparison.OrdinalIgnoreCase);
+        var isJpeg = string.Equals(ext, ImageFormatsEnum.Jpeg.ToString(), StringComparison.OrdinalIgnoreCase);
+        var isPng = string.Equals(ext, ImageFormatsEnum.Png.ToString(), StringComparison.OrdinalIgnoreCase);
+        var isHeic = string.Equals(ext, ImageFormatsEnum.Heic.ToString(), StringComparison.OrdinalIgnoreCase);
+        var isWebp = string.Equals(ext, ImageFormatsEnum.Webp.ToString(), StringComparison.OrdinalIgnoreCase);
+
         /** удаление метаданных **/
         _magickImage.Strip();
         _magickImage.Write(_filePath);
         info.Refresh();
-
-        if (string.Equals(ext, ImageFormatsEnum.Heic.ToString(), StringComparison.OrdinalIgnoreCase) ||
-            string.Equals(ext, ImageFormatsEnum.Webp.ToString(), StringComparison.OrdinalIgnoreCase)) return;
-
-        if (string.Equals(ext, ImageFormatsEnum.Jpg.ToString(), StringComparison.OrdinalIgnoreCase))
+        
+        if (isHeic || isWebp)
         {
-            _magickImage.Format = MagickFormat.Jpeg;
+           
+        }
+        else if (isJpeg || isJpg)
+        {
+            if (isJpg) _magickImage.Format = MagickFormat.Jpeg;
+            
             _magickImage.Settings.Interlace = Interlace.Jpeg;
-            
-            var optimizer = new ImageOptimizer();
-            optimizer.LosslessCompress(info);
-            
+
             Console.WriteLine(_magickImage.Quality);
             _magickImage.Quality = CalculateQuality(
-                currQuality: (byte)_magickImage.Quality, 
+                currQuality: (byte)_magickImage.Quality,
                 qualityDemotion: 20,
                 minQuality: 60);
             Console.WriteLine(_magickImage.Quality);
+            
+            _magickImage.Depth = 8;
             _magickImage.Write(_filePath);
-            info.Refresh();
+            info?.Refresh();
         }
-
-        if (string.Equals(ext, ImageFormatsEnum.Png.ToString(), StringComparison.OrdinalIgnoreCase))
+        else if (isPng)
         {
-            _magickImage.Settings.Interlace = Interlace.Png;
-            _magickImage.Write(_filePath);
-            info.Refresh();
+
+            if (image.Metadata.ExifProfile is not null) 
+                image.Metadata.ExifProfile = null;
+            
+            if (image.Metadata.CicpProfile is not null) 
+                image.Metadata.CicpProfile = null;
+            
+            var encoder = new PngEncoder
+            {
+                CompressionLevel = PngCompressionLevel.Level9, 
+                BitDepth = PngBitDepth.Bit8,
+                FilterMethod = PngFilterMethod.Adaptive,
+            };
+            
+            image.Save(_filePath, encoder);
         }
     }
 
