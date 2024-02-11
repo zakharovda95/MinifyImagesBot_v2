@@ -7,6 +7,7 @@ using Telegram.Bot.Exceptions;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
+using Telegram.Bot.Types.ReplyMarkups;
 using File = System.IO.File;
 
 namespace MinifyImagesBot_v2.Classes;
@@ -23,7 +24,7 @@ internal sealed class TelegramBot : ITelegramBot
         var sticker = update.Message?.Sticker;
         var caption = update.Message?.Caption;
 
-        if (text is not null && sticker is null) await HandleText(text, telegramHelper: telegramHelper);
+        if (text is not null && sticker is null) await HandleText(text: text, telegramHelper: telegramHelper);
         else if (photo is not null) await HandlePhoto(telegramHelper: telegramHelper);
         else if (document is not null)
             await HandleDocument(document: document, caption: caption, telegramHelper: telegramHelper);
@@ -88,7 +89,46 @@ internal sealed class TelegramBot : ITelegramBot
         var filePath = FileHelper.CreateFilePath(document: document);
         var res = await telegramHelper.DownloadFileAndSave(filePath: filePath, fileId: document.FileId);
 
-        if (res is null)
+        var keysFormats = new[]
+        {
+            new[]
+            {
+                InlineKeyboardButton.WithCallbackData(ImageFormatsEnum.Webp.ToString(),
+                    ImageFormatsEnum.Webp.ToString()),
+                InlineKeyboardButton.WithCallbackData(ImageFormatsEnum.Heic.ToString(),
+                    ImageFormatsEnum.Heic.ToString()),
+            },
+            new[]
+            {
+                InlineKeyboardButton.WithCallbackData("Без конвертации", "none"),
+            }
+        };
+
+        var keyboardFormats = new InlineKeyboardMarkup(keysFormats);
+
+        var messageFormats = await telegramHelper.SendBaseMessage(message: "Выберите формат для конвертации", replyMessage: true, markup: keyboardFormats);
+        
+        var keysQuality = new[]
+        {
+            new[]
+            {
+                InlineKeyboardButton.WithCallbackData("Максимальное сжатие", "maxCompress"),
+                InlineKeyboardButton.WithCallbackData("Щадящее сжатие", "minCompress"),
+            },
+            new[]
+            {
+                InlineKeyboardButton.WithCallbackData("Без сжатия", "noneCompress"),
+            }
+        };
+
+        var keyboardQuality = new InlineKeyboardMarkup(keysQuality);
+
+        var messageQuality = await telegramHelper.SendBaseMessage(
+            message: "*Выберите Уровень сжатия* \n\n * \\- Максимальный* \\- конвертация \\+ максимальное сжатие \\(может быть незначительное снижение качества изображений при большом увеличении\\) \n * \\- Минимальный* \\- при изменении формата применяется щадящая компрессия, без изменения формата \\- применяется максимальная компрессия \n * \\- Без сжатия* \\- компрессия не применяется", 
+            replyMessage: true, 
+            markup: keyboardQuality);
+
+        /*if (res is null)
         {
             await telegramHelper.SendSystemMessage(
                 message: ResponseSystemTextMessagesData.Error,
@@ -96,17 +136,17 @@ internal sealed class TelegramBot : ITelegramBot
                 replyMessage: true
             );
             return;
-        }
+        }*/
 
-        await telegramHelper.SendSystemMessage(
+        /*await telegramHelper.SendSystemMessage(
             message: ResponseSystemTextMessagesData.StartFormatting,
             type: SystemMessagesTypesEnum.Default,
             replyMessage: true
-        );
+        );*/
 
-        var result = EditImage(filePath: filePath, caption: caption);
+        //var result = EditImage(filePath: filePath, caption: caption);
 
-        if (!result.IsSuccess)
+        /*if (!result.IsSuccess)
         {
             await telegramHelper.SendSystemMessage(
                 message: ResponseSystemTextMessagesData.ErrorFormat,
@@ -115,12 +155,13 @@ internal sealed class TelegramBot : ITelegramBot
             );
             File.Delete(filePath);
             return;
-        }
-        
-        var sendingCaption =
-            $"Размер: {result.FileInfoBefore?.FileLength} --> {result.FileInfoAfter?.FileLength}; \n Формат: {result.FileInfoBefore?.FileExt} --> {result.FileInfoAfter?.FileExt}";
-        if (result.FilePath is not null)
+        }*/
+
+        /*if (result.FilePath is not null)
         {
+            var sendingCaption =
+                $"Размер: {result.FileInfoBefore?.FileLength} --> {result.FileInfoAfter?.FileLength}; \n Формат: {result.FileInfoBefore?.FileExt} --> {result.FileInfoAfter?.FileExt}";
+
             await telegramHelper.SendSystemMessage(
                 message: ResponseSystemTextMessagesData.Done,
                 type: SystemMessagesTypesEnum.EditingResult,
@@ -130,9 +171,9 @@ internal sealed class TelegramBot : ITelegramBot
             File.Delete(result.FilePath);
             File.Delete(filePath);
             return;
-        }
-        
-        File.Delete(filePath);
+        }*/
+
+        //File.Delete(filePath);
     }
 
     private static async Task HandleSticker(Sticker sticker, ITelegramHelper telegramHelper)

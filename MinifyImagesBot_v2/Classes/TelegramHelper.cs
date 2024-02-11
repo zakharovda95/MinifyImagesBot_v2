@@ -3,6 +3,7 @@ using MinifyImagesBot_v2.Interfaces;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
+using Telegram.Bot.Types.ReplyMarkups;
 using StreamFile = System.IO.File;
 using File = Telegram.Bot.Types.File;
 
@@ -24,7 +25,7 @@ internal class TelegramHelper : ITelegramHelper
         _chatId = update.Message?.Chat.Id;
     }
 
-    public async Task<Message?> SendBaseMessage(string? message, bool replyMessage = false)
+    public async Task<Message?> SendBaseMessage(string? message, bool replyMessage = false, InlineKeyboardMarkup? markup = null)
     {
         try
         {
@@ -35,7 +36,8 @@ internal class TelegramHelper : ITelegramHelper
                 cancellationToken: _cancellationToken,
                 disableNotification: true,
                 replyToMessageId: replyMessage is false ? null : _update.Message?.MessageId,
-                parseMode: ParseMode.MarkdownV2
+                parseMode: ParseMode.MarkdownV2,
+                replyMarkup: markup
             );
 
             return res;
@@ -164,5 +166,10 @@ internal class TelegramHelper : ITelegramHelper
 
             return false;
         }
+    }
+
+    public Task<ReplyKeyboardMarkup> CreateKeyboardMarkup(string[] buttons)
+    {
+        throw new NotImplementedException();
     }
 }
