@@ -29,7 +29,9 @@ var tgKey = settingsService.GetTelegramKey();
 var tgBot = new TelegramBot();
 tgBot.CreateTelegramClientAndRun(telegramKey: tgKey);
 
-while (true)
+Console.ReadKey();
+
+/*while (true)
 {
     Thread.Sleep(100000);
-}
+}*/

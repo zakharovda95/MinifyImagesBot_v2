@@ -1,6 +1,6 @@
 namespace MinifyImagesBot_v2.Enums;
 
-public enum ImageFormatsEnum
+internal enum ImageFormatsEnum
 {
     Jpg,
     Jpeg,

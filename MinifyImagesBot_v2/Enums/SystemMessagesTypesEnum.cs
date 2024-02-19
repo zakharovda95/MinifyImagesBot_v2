@@ -1,6 +1,6 @@
 namespace MinifyImagesBot_v2.Enums;
 
-public enum SystemMessagesTypesEnum
+internal enum SystemMessagesTypesEnum
 {
     Default,
     Warning,

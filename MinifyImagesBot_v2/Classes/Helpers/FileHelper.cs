@@ -1,9 +1,8 @@
-using System.Reflection;
 using ImageMagick;
 using Telegram.Bot.Types;
 using File = System.IO.File;
 
-namespace MinifyImagesBot_v2.Classes;
+namespace MinifyImagesBot_v2.Classes.Helpers;
 
 internal static class FileHelper
 {

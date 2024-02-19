@@ -1,4 +1,5 @@
 using ImageMagick;
+using MinifyImagesBot_v2.Classes.Helpers;
 using MinifyImagesBot_v2.Enums;
 using MinifyImagesBot_v2.Interfaces;
 using MinifyImagesBot_v2.Models;
