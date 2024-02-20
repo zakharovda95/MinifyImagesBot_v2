@@ -316,6 +316,7 @@ internal sealed class TelegramBot : ITelegramBot
         }
 
         var document = update.Message?.Document;
+        // Если недопустимый формат - выдаем предупреждение
         if (document?.MimeType is null || !document.MimeType.StartsWith("image/"))
         {
             await TelegramHelper.SendSystemMessage(
@@ -357,6 +358,7 @@ internal sealed class TelegramBot : ITelegramBot
 
         if (userParams is not null) userParams.FilePath = filePath;
 
+        // Выдаем клавиатуру для выбора формата
         var keyboardFormats = TelegramHelper.GetKeyboard(KeyboardTypesEnum.Format);
         if (keyboardFormats is null) return;
         await TelegramHelper.SendKeyboardMessage(
@@ -375,19 +377,6 @@ internal sealed class TelegramBot : ITelegramBot
         CancellationToken cancellationToken
     )
     {
-        /*if (!_isProcessed)
-        {
-            await TelegramHelper.SendSystemMessage(
-                botClient: botClient,
-                update: update,
-                cancellationToken: cancellationToken,
-                message: ResponseSystemTextMessagesData.UserIdError,
-                type: SystemMessagesTypesEnum.Error,
-                replyMessage: true
-            );
-            return;
-        }*/
-
         var chatId = update.CallbackQuery?.From.Id;
         if (chatId is null)
         {
@@ -413,7 +402,6 @@ internal sealed class TelegramBot : ITelegramBot
                 replyMessage: true
             );
             UserEditParams.Remove((long)chatId);
-            Console.WriteLine("нет объекта");
             return;
         }
 
@@ -428,7 +416,6 @@ internal sealed class TelegramBot : ITelegramBot
                 replyMessage: true
             );
             UserEditParams.Remove((long)chatId);
-            Console.WriteLine("нет пути");
             return;
         }
 
@@ -440,11 +427,11 @@ internal sealed class TelegramBot : ITelegramBot
             settings.CompressLevel is null
         )
         {
-            Console.WriteLine("Блок1");
             if (Enum.TryParse<FormatKeyboardEnum>(update.CallbackQuery?.Data, out var format))
             {
                 settings.ResultFormat = format;
-                Console.WriteLine(UserEditParams);
+                
+                //отправляем клавиатуру степени сжатия
                 var keyboardQuality = TelegramHelper.GetKeyboard(KeyboardTypesEnum.Compression);
                 if (keyboardQuality is null) return;
                 var res = await TelegramHelper.SendKeyboardMessage(
@@ -455,7 +442,6 @@ internal sealed class TelegramBot : ITelegramBot
                     $"Форматирование\\: *{format.GetDisplayName().ToLower()}* \n\n*Уровень сжатия\\:*  \nВыберите один из предложенных вариантов \n\n\u2757 _Для отмены отправьте любое сообщение в чат_",
                     replyMessage: true,
                     markup: keyboardQuality);
-                Console.WriteLine("Трайпарс1");
             }
             else
             {
@@ -478,10 +464,11 @@ internal sealed class TelegramBot : ITelegramBot
                  settings.CompressLevel is null
                 )
         {
-            Console.WriteLine("Блок2");
             if (Enum.TryParse<CompressKeyboardEnum>(update.CallbackQuery?.Data, out var compress))
             {
                 settings.CompressLevel = compress;
+                
+                // начинаем обработку файла
                 await TelegramHelper.SendSystemMessage(
                     botClient: botClient,
                     update: update,
@@ -490,7 +477,6 @@ internal sealed class TelegramBot : ITelegramBot
                     type: SystemMessagesTypesEnum.Default,
                     replyMessage: false
                 );
-                Console.WriteLine("Трайпарс2");
             }
             else
             {
@@ -519,7 +505,6 @@ internal sealed class TelegramBot : ITelegramBot
             );
             File.Delete(settings.FilePath);
             UserEditParams.Remove((long)chatId);
-            Console.WriteLine("другая ошибка");
         }
     }
 
