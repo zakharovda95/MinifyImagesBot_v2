@@ -60,7 +60,7 @@ internal static class TelegramHelper
     {
         try
         {
-            var chatId = update.Message?.Chat.Id;
+            var chatId = update.Message?.Chat.Id ?? update.CallbackQuery?.From.Id;
             if (message is null || chatId is null) return null;
             var res = await botClient.SendTextMessageAsync(
                 chatId: chatId,

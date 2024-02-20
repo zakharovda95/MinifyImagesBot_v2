@@ -12,7 +12,7 @@ internal enum FormatKeyboardEnum
 {
     [Display(Name = "В WebP")]
     Webp,
-    [Display(Name = "Без конвертации")]
+    [Display(Name = "Без форматирования")]
     None,
 }
 

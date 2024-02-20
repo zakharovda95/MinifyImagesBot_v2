@@ -9,10 +9,10 @@ internal static class ResponseSystemTextMessagesData
         "\n\u2757 Для лучшей оптимизации <b>отправьте изображение файлом</b> (без сжатия)";
 
     internal static readonly string ErrorFormat =
-        " \n\ud83d\udeab Файл поврежден или имеет недопустимый формат \n \nДопустимые форматы: \n <b>jpg | jpeg | webp | png</b>";
+        " \n\ud83d\udeab Файл поврежден или имеет недопустимый формат \n \nДопустимые форматы: \n <b>jpg/jpeg | png | heic</b>";
     
     internal static readonly string WrongFormat =
-        " \n\u2757 Указан недопустимый формат \n \nДопустимые форматы: \n <b>jpg | jpeg | webp | png</b>";
+        " \n\u2757 Указан недопустимый формат \n \nДопустимые форматы: \n <b>jpg/jpeg | png  | heic</b>";
 
     internal static readonly string Error =
         "\n\ud83d\udeab Что то пошло не так! \n \nПовторите попытку";
@@ -21,7 +21,7 @@ internal static class ResponseSystemTextMessagesData
         "\n\ud83d\udeab Ошибка при сохранении файла! \n \nПовторите попытку";
     
     internal static readonly string WrongAlgoritm =
-        "\n\ud83d\udeab Форматирование отменено! \n\n Чтобы повторить, загрузите изображение и выберите предложенные настройки";
+        "\n\ud83d\udeab <b>Форматирование отменено!</b> \n\n Чтобы повторить, загрузите изображение и следуйте подсказкам";
 
     internal static readonly string StartFormatting =
         "\n\u2705 Начинаю форматирование!";
