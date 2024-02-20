@@ -22,7 +22,7 @@ internal static class TelegramHelper
     {
         try
         {
-            var chatId = update.Message?.Chat.Id;
+            var chatId = update.Message?.Chat.Id ?? update.CallbackQuery?.From.Id;
             if (message is null || chatId is null) return null;
             var res = await botClient.SendTextMessageAsync(
                 chatId: chatId,
@@ -100,7 +100,7 @@ internal static class TelegramHelper
     {
         try
         {
-            var chatId = update.Message?.Chat.Id;
+            var chatId = update.Message?.Chat.Id ?? update.CallbackQuery?.From.Id;
             if (message is null || chatId is null) return null;
 
             var messagePrefix = type switch
@@ -169,7 +169,7 @@ internal static class TelegramHelper
     {
         try
         {
-            var chatId = update.Message?.Chat.Id;
+            var chatId = update.Message?.Chat.Id ?? update.CallbackQuery?.From.Id;
             if (chatId is null) return null;
             await using Stream fileStream = StreamFile.OpenRead(filePath);
             var fileName = filePath.Split("/").Last();
@@ -210,7 +210,7 @@ internal static class TelegramHelper
     {
         try
         {
-            var chatId = update.Message?.Chat.Id;
+            var chatId = update.Message?.Chat.Id ?? update.CallbackQuery?.From.Id;
             if (chatId is null) return null;
             await using Stream fileStream = StreamFile.OpenRead(filePath);
             var fileName = filePath.Split("/").Last();

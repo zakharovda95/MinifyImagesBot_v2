@@ -50,25 +50,6 @@ internal sealed class TelegramBot : ITelegramBot
         return Task.CompletedTask;
     }
 
-    private static bool TryGetUserParams(long? chatId, out ImageEditingParamsModel? userParams)
-    {
-        if (chatId is null)
-        {
-            userParams = null;
-            return false;
-        }
-
-        var isSuccess = _userEditParams.TryGetValue((long)chatId!, out var settings);
-        if (!isSuccess)
-        {
-            userParams = null;
-            return false;
-        }
-
-        userParams = settings;
-        return true;
-    }
-
     private static async void ShowReadyInfo(ITelegramBotClient telegramBotClient)
     {
         var info = await telegramBotClient.GetMeAsync();
@@ -86,7 +67,6 @@ internal sealed class TelegramBot : ITelegramBot
         {
             if (userParams.FilePath is not null)
             {
-                Console.WriteLine(_userEditParams);
                 File.Delete(userParams.FilePath);
                 _userEditParams.Remove((long)chatId);
                 await TelegramHelper.SendSystemMessage(
@@ -96,7 +76,6 @@ internal sealed class TelegramBot : ITelegramBot
                     message: ResponseSystemTextMessagesData.WrongAlgoritm,
                     type: SystemMessagesTypesEnum.Warning,
                     replyMessage: true);
-                Console.WriteLine(_userEditParams);
                 return;
             }
         }
@@ -322,23 +301,43 @@ internal sealed class TelegramBot : ITelegramBot
                 botClient: botClient,
                 update: update,
                 cancellationToken: cancellationToken,
-                message: ResponseSystemTextMessagesData.Error,
+                message: ResponseSystemTextMessagesData.UserIdError,
                 type: SystemMessagesTypesEnum.Error,
                 replyMessage: true
             );
+            Console.WriteLine("нет чат айди");
             return;
         }
 
         if (!_userEditParams.TryGetValue((long)chatId, out var settings))
+        {
             await TelegramHelper.SendSystemMessage(
                 botClient: botClient,
                 update: update,
                 cancellationToken: cancellationToken,
-                message: ResponseSystemTextMessagesData.Error,
+                message: ResponseSystemTextMessagesData.FilePathError,
                 type: SystemMessagesTypesEnum.Error,
                 replyMessage: true
             );
-        Console.WriteLine(settings);
+            _userEditParams.Remove((long)chatId);
+            Console.WriteLine("нет объекта");
+            return;
+        }
+
+        if (settings.FilePath is null)
+        {
+            await TelegramHelper.SendSystemMessage(
+                botClient: botClient,
+                update: update,
+                cancellationToken: cancellationToken,
+                message: ResponseSystemTextMessagesData.FilePathError,
+                type: SystemMessagesTypesEnum.Error,
+                replyMessage: true
+            );
+            _userEditParams.Remove((long)chatId);
+            Console.WriteLine("нет пути");
+            return;
+        }
 
         // Не выбрано параметров
         if (
@@ -348,9 +347,11 @@ internal sealed class TelegramBot : ITelegramBot
             settings.CompressLevel is null
         )
         {
+            Console.WriteLine("Блок1");
             if (Enum.TryParse<FormatKeyboardEnum>(update.CallbackQuery?.Data, out var format))
             {
                 settings.ResultFormat = format;
+                Console.WriteLine(_userEditParams);
                 var keyboardQuality = TelegramHelper.GetKeyboard(KeyboardTypesEnum.Compression);
                 if (keyboardQuality is null) return;
                 var res = await TelegramHelper.SendKeyboardMessage(
@@ -361,8 +362,10 @@ internal sealed class TelegramBot : ITelegramBot
                     $"Форматирование\\: *{format.GetDisplayName().ToLower()}* \n\n*Уровень сжатия\\:*  \nВыберите один из предложенных вариантов \n\n\u2757 _Для отмены отправьте любое сообщение в чат_",
                     replyMessage: true,
                     markup: keyboardQuality);
+                Console.WriteLine("Трайпарс1");
             }
             else
+            {
                 await TelegramHelper.SendSystemMessage(
                     botClient: botClient,
                     update: update,
@@ -371,6 +374,9 @@ internal sealed class TelegramBot : ITelegramBot
                     type: SystemMessagesTypesEnum.Error,
                     replyMessage: true
                 );
+                File.Delete(settings.FilePath);
+                _userEditParams.Remove((long)chatId);
+            }
         }
         else if ( // выбран формат не выбран уровень сжатия
                  settings.ChatId == chatId &&
@@ -379,6 +385,7 @@ internal sealed class TelegramBot : ITelegramBot
                  settings.CompressLevel is null
                 )
         {
+            Console.WriteLine("Блок2");
             if (Enum.TryParse<CompressKeyboardEnum>(update.CallbackQuery?.Data, out var compress))
             {
                 settings.CompressLevel = compress;
@@ -390,8 +397,10 @@ internal sealed class TelegramBot : ITelegramBot
                     type: SystemMessagesTypesEnum.Default,
                     replyMessage: false
                 );
+                Console.WriteLine("Трайпарс2");
             }
             else
+            {
                 await TelegramHelper.SendSystemMessage(
                     botClient: botClient,
                     update: update,
@@ -400,6 +409,9 @@ internal sealed class TelegramBot : ITelegramBot
                     type: SystemMessagesTypesEnum.Error,
                     replyMessage: true
                 );
+                File.Delete(settings.FilePath);
+                _userEditParams.Remove((long)chatId);
+            }
         }
         else
         {
@@ -412,6 +424,9 @@ internal sealed class TelegramBot : ITelegramBot
                 type: SystemMessagesTypesEnum.Error,
                 replyMessage: true
             );
+            File.Delete(settings.FilePath);
+            _userEditParams.Remove((long)chatId);
+            Console.WriteLine("другая ошибка");
         }
     }
 

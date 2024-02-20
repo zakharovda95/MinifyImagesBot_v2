@@ -1,6 +1,6 @@
 namespace MinifyImagesBot_v2.Models;
 
-internal record struct ImageEditingResultModel
+internal record class ImageEditingResultModel
 {
     internal bool IsSuccess { get; init; }
     
