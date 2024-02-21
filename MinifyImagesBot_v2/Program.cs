@@ -19,17 +19,17 @@ configuration.SetBasePath(baseDirectory).AddJsonFile($"appsettings.{env}.json");
 services.AddSingleton<IAppSettings>(_ => new AppSettingsService(configuration: configuration));
 
 var host = hostBuilder.Build();
-host.RunAsync();
 
 MagickNET.Initialize();
 
 var settingsService = host.Services.GetRequiredService<IAppSettings>();
 
 var tgKey = settingsService.GetTelegramKey();
-var tgBot = new TelegramBot();
-tgBot.CreateTelegramClientAndRun(telegramKey: tgKey);
+await TelegramBot.CreateTelegramClientAndRun(telegramKey: tgKey);
 
 Console.ReadKey();
+
+await host.RunAsync();
 
 /*while (true)
 {

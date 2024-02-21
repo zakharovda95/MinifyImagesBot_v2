@@ -6,6 +6,6 @@ internal record class ImageEditingResultModel
     
     internal string? Message { get; init; }
     internal string? FilePath { get; init; }
-    internal ImageEditingFileInfoModel? FileInfoBefore { get; init; } 
-    internal ImageEditingFileInfoModel? FileInfoAfter { get; init; }
+    internal ImageInfoModel? FileInfoBefore { get; init; } 
+    internal ImageInfoModel? FileInfoAfter { get; init; }
 };

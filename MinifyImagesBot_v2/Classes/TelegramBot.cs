@@ -2,7 +2,6 @@ using MinifyImagesBot_v2.Classes.Extensions;
 using MinifyImagesBot_v2.Classes.Helpers;
 using MinifyImagesBot_v2.Data;
 using MinifyImagesBot_v2.Enums;
-using MinifyImagesBot_v2.Interfaces;
 using MinifyImagesBot_v2.Models;
 using Telegram.Bot;
 using Telegram.Bot.Exceptions;
@@ -13,11 +12,11 @@ using File = System.IO.File;
 
 namespace MinifyImagesBot_v2.Classes;
 
-internal sealed class TelegramBot : ITelegramBot
+internal static class TelegramBot
 {
     private static readonly Dictionary<long, ImageEditingParamsModel> UserEditParams = new();
 
-    private async Task OnUpdate(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
+    private static async Task OnUpdate(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
     {
         var text = update.Message?.Text;
         var photo = update.Message?.Photo;
@@ -37,7 +36,7 @@ internal sealed class TelegramBot : ITelegramBot
             await HandleQuery(botClient: botClient, update: update, cancellationToken: cancellationToken);
     }
 
-    private Task OnError(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)
+    private static Task OnError(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)
     {
         var errorMessage = exception switch
         {
@@ -333,6 +332,7 @@ internal sealed class TelegramBot : ITelegramBot
                 );
                 File.Delete(userParams.FilePath);
                 UserEditParams.Remove((long)chatId);
+                return;
             }
 
             await TelegramHelper.SendKeyboardMessage(
@@ -420,6 +420,7 @@ internal sealed class TelegramBot : ITelegramBot
                     );
                     File.Delete(userParams.FilePath);
                     UserEditParams.Remove((long)chatId);
+                    return;
                 }
                 var res = await TelegramHelper.SendKeyboardMessage(
                     botClient: botClient,
@@ -451,7 +452,7 @@ internal sealed class TelegramBot : ITelegramBot
                  userParams.CompressLevel is null
                 )
         {
-            if (Enum.TryParse<CompressKeyboardEnum>(update.CallbackQuery?.Data, out var compress))
+            if (Enum.TryParse<CompressKeyboardEnum>(update.CallbackQuery?.Data, ignoreCase: true, out var compress))
             {
                 userParams.CompressLevel = compress;
                 
@@ -464,6 +465,11 @@ internal sealed class TelegramBot : ITelegramBot
                     type: SystemMessagesTypesEnum.Default,
                     replyMessage: false
                 );
+
+                var editor = new ImageEditor(userParams);
+                editor.Edit();
+                
+                
             }
             else
             {
@@ -501,12 +507,12 @@ internal sealed class TelegramBot : ITelegramBot
         Console.WriteLine($"The Bot {info.Username} with ID {info.Id} is ready!");
     }
 
-    public async Task CreateTelegramClientAndRun(string? telegramKey)
+    public static async Task CreateTelegramClientAndRun(string? telegramKey)
     {
         if (telegramKey is null) return;
 
         var telegramBotClient = new TelegramBotClient(telegramKey);
-        using CancellationTokenSource ctx = new CancellationTokenSource();
+        using var ctx = new CancellationTokenSource();
         var receiverOptions = new ReceiverOptions() { AllowedUpdates = Array.Empty<UpdateType>() };
         telegramBotClient.StartReceiving(
             updateHandler: OnUpdate,
