@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.IO.Compression;
 using ImageMagick;
+using ImageMagick.Formats;
 using MinifyImagesBot_v2.Classes.Helpers;
 using MinifyImagesBot_v2.Enums;
 using MinifyImagesBot_v2.Interfaces;
@@ -44,17 +45,22 @@ internal class ImageEditor : IImageEditor
     {
         if (!string.IsNullOrEmpty(_userParams.FilePath))
         {
-            using var magik = new MagickImage(_userParams.FilePath);
             if (_userParams.CompressLevel == CompressKeyboardEnum.MaxCompress)
             {
-                magik.RemoveProfile("*"); // удаление всех мета
-                magik.Settings.SetDefine(MagickFormat.Png, "compression-level", "9"); // сжатие
-            }
-            
-            magik.Write(_userParams.FilePath);
+                var settings = new MagickReadSettings
+                {
+                    Compression = CompressionMethod.ZipS,
+                    ColorType = ColorType.PaletteAlpha,
+                    Depth = 8
+                };
 
-            TryGetImageInfo(out var info);
-            Console.Write(info);
+                using var magik = new MagickImage(_userParams.FilePath, settings);
+                
+                magik.RemoveProfile("*"); // удаление всех мета
+                magik.Strip();
+                magik.FilterType = FilterType.Lanczos2Sharp;
+                magik.Write(_userParams.FilePath);
+            }
             
             return new ImageEditingResultModel { IsSuccess = true };
         }
@@ -83,21 +89,15 @@ internal class ImageEditor : IImageEditor
         switch (format)
         {
             case AvailableFormatsEnum.Png:
-                HandlePng();
-                break;
+               return HandlePng();
             case AvailableFormatsEnum.Jpeg:
-                HandleJpgJpeg();
-                break;
+                return HandleJpgJpeg();
             case AvailableFormatsEnum.Jpg:
-                HandleJpgJpeg();
-                break;
+                return HandleJpgJpeg();
             case AvailableFormatsEnum.Heic:
-                HandleHeic();
-                break;
+                return HandleHeic();
             case AvailableFormatsEnum.Webp:
             default: return new ImageEditingResultModel { IsSuccess = false };
         }
-
-        return new ImageEditingResultModel { IsSuccess = false };
     }
 }

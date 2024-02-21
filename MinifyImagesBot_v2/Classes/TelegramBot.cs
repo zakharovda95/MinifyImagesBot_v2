@@ -474,7 +474,7 @@ internal static class TelegramBot
                         botClient: botClient,
                         update: update,
                         cancellationToken: cancellationToken,
-                        message: ResponseSystemTextMessagesData.EditingError,
+                        message: ResponseSystemTextMessagesData.Done,
                         type: SystemMessagesTypesEnum.Error,
                         replyMessage: true
                     );
