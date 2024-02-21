@@ -287,7 +287,7 @@ internal static class TelegramBot
                     type: SystemMessagesTypesEnum.Warning,
                     replyMessage: true);
 
-                if (!string.IsNullOrEmpty(userParams?.FilePath)) File.Delete(userParams.FilePath);
+                if (!string.IsNullOrEmpty(userParams.FilePath)) File.Delete(userParams.FilePath);
                 UserEditParams.Remove((long)chatId);
                 return;
             }
@@ -422,7 +422,7 @@ internal static class TelegramBot
                     UserEditParams.Remove((long)chatId);
                     return;
                 }
-                var res = await TelegramHelper.SendKeyboardMessage(
+                await TelegramHelper.SendKeyboardMessage(
                     botClient: botClient,
                     update: update,
                     cancellationToken: cancellationToken,
@@ -467,8 +467,35 @@ internal static class TelegramBot
                 );
 
                 var editor = new ImageEditor(userParams);
-                editor.Edit();
-                
+                var editingResult = editor.Edit();
+                if (editingResult.IsSuccess)
+                {
+                    await TelegramHelper.SendSystemMessage(
+                        botClient: botClient,
+                        update: update,
+                        cancellationToken: cancellationToken,
+                        message: ResponseSystemTextMessagesData.EditingError,
+                        type: SystemMessagesTypesEnum.Error,
+                        replyMessage: true
+                    );
+                    File.Delete(userParams.FilePath);
+                    if (editingResult.FilePath is not null) 
+                        File.Delete(editingResult.FilePath);
+                    UserEditParams.Remove((long)chatId);
+                }
+                else
+                {
+                    await TelegramHelper.SendSystemMessage(
+                        botClient: botClient,
+                        update: update,
+                        cancellationToken: cancellationToken,
+                        message: ResponseSystemTextMessagesData.EditingError,
+                        type: SystemMessagesTypesEnum.Error,
+                        replyMessage: true
+                    );
+                    File.Delete(userParams.FilePath);
+                    UserEditParams.Remove((long)chatId);
+                }
                 
             }
             else

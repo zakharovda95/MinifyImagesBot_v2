@@ -29,6 +29,9 @@ internal static class ResponseSystemTextMessagesData
     internal static readonly string ProcessError =
         "\n\ud83d\udeab Процесс не активен! \n \n\u25aa<i>Повторите попытку!</i>";
     
+    internal static readonly string EditingError =
+        "\n\ud83d\udeab Ошибка в процессе редактирования! \n \n\u25aa<i>Повторите попытку!</i>";
+    
     internal static readonly string InProcessError =
         "\n\ud83d\udeab Внимание, уже есть активный процесс! \n \n\u25aaЗавершите редактирование предыдущего изображения, либо отмените процесс \n \n\u2757<i>Чтобы отменить процесс отправьте любое сообщение</i>";
     

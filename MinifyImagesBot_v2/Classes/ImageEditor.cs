@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using System.IO.Compression;
 using ImageMagick;
 using MinifyImagesBot_v2.Classes.Helpers;
 using MinifyImagesBot_v2.Enums;
@@ -38,17 +39,47 @@ internal class ImageEditor : IImageEditor
         };
         return true;
     }
-    
-    private ImageEditingResultModel HandlePng() {}
-    private ImageEditingResultModel HandleJpgJpeg() {}
-    
-    private ImageEditingResultModel HandleHeic() {}
+
+    private ImageEditingResultModel HandlePng()
+    {
+        if (!string.IsNullOrEmpty(_userParams.FilePath))
+        {
+            using var magik = new MagickImage(_userParams.FilePath);
+            if (_userParams.CompressLevel == CompressKeyboardEnum.MaxCompress)
+            {
+                magik.RemoveProfile("*"); // удаление всех мета
+                magik.Settings.SetDefine(MagickFormat.Png, "compression-level", "9"); // сжатие
+            }
+            
+            magik.Write(_userParams.FilePath);
+
+            TryGetImageInfo(out var info);
+            Console.Write(info);
+            
+            return new ImageEditingResultModel { IsSuccess = true };
+        }
+        return new ImageEditingResultModel { IsSuccess = false };
+    }
+
+    private ImageEditingResultModel HandleJpgJpeg()
+    {
+        return new ImageEditingResultModel { IsSuccess = true };
+    }
+
+    private ImageEditingResultModel HandleHeic()
+    {
+        return new ImageEditingResultModel { IsSuccess = true };
+    }
 
     public ImageEditingResultModel Edit()
     {
-        if (!TryGetImageInfo(out var info)) return new ImageEditingResultModel() { };
-        if (!Enum.TryParse<AvailableFormatsEnum>(info.Format.ToString(), ignoreCase: true, out var format))
-            return new ImageEditingResultModel() { };
+        if (!TryGetImageInfo(out var info) || info.Format is null)
+            return new ImageEditingResultModel { IsSuccess = false };
+
+        var formatString = Enum.GetName(typeof(MagickFormat), info.Format);
+        if (!Enum.TryParse<AvailableFormatsEnum>(formatString, ignoreCase: true, out var format))
+            return new ImageEditingResultModel { IsSuccess = false };
+
         switch (format)
         {
             case AvailableFormatsEnum.Png:
@@ -63,12 +94,10 @@ internal class ImageEditor : IImageEditor
             case AvailableFormatsEnum.Heic:
                 HandleHeic();
                 break;
-            default:
-                return new ImageEditingResultModel() { };
+            case AvailableFormatsEnum.Webp:
+            default: return new ImageEditingResultModel { IsSuccess = false };
         }
 
-        return new ImageEditingResultModel() { };
+        return new ImageEditingResultModel { IsSuccess = false };
     }
-    
-    
 }
