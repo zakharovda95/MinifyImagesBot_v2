@@ -25,39 +25,6 @@ internal sealed class TelegramBot : ITelegramBot
         var sticker = update.Message?.Sticker;
         var query = update.CallbackQuery;
 
-        /*if (update.Message?.MediaGroupId is not null)
-        {
-            if (!_isMultipleImagesError)
-            {
-                _isMultipleImagesError = true;
-                await TelegramHelper.SendSystemMessage(
-                    botClient: botClient,
-                    update: update,
-                    cancellationToken: cancellationToken,
-                    message: ResponseSystemTextMessagesData.WrongMultiple,
-                    type: SystemMessagesTypesEnum.Warning,
-                    replyMessage: true);
-                return;
-            }
-            _isProcessed = false;
-            _isMultipleImagesError = false;
-            return;
-        }*/
-
-        /*if (!_isProcessed)
-        {
-            await TelegramHelper.SendSystemMessage(
-                botClient: botClient,
-                update: update,
-                cancellationToken: cancellationToken,
-                message: ResponseSystemTextMessagesData.WrongMultiple,
-                type: SystemMessagesTypesEnum.Warning,
-                replyMessage: true);
-            return;
-        }
-
-        _isMultipleImagesError = false;*/
-
         if (text is not null && sticker is null)
             await HandleText(botClient: botClient, update: update, cancellationToken: cancellationToken);
         else if (photo is not null)
@@ -81,12 +48,6 @@ internal sealed class TelegramBot : ITelegramBot
         return Task.CompletedTask;
     }
 
-    private static async void ShowReadyInfo(ITelegramBotClient telegramBotClient)
-    {
-        var info = await telegramBotClient.GetMeAsync();
-        Console.WriteLine($"The Bot {info.Username} with ID {info.Id} is ready!");
-    }
-
     private static async Task HandleText(
         ITelegramBotClient botClient,
         Update update,
@@ -98,8 +59,6 @@ internal sealed class TelegramBot : ITelegramBot
         {
             if (userParams.FilePath is not null)
             {
-                File.Delete(userParams.FilePath);
-                UserEditParams.Remove((long)chatId);
                 await TelegramHelper.SendSystemMessage(
                     botClient: botClient,
                     update: update,
@@ -107,6 +66,8 @@ internal sealed class TelegramBot : ITelegramBot
                     message: ResponseSystemTextMessagesData.WrongAlgoritm,
                     type: SystemMessagesTypesEnum.Warning,
                     replyMessage: true);
+                File.Delete(userParams.FilePath);
+                UserEditParams.Remove((long)chatId);
                 return;
             }
         }
@@ -192,8 +153,6 @@ internal sealed class TelegramBot : ITelegramBot
         {
             if (userParams.FilePath is not null)
             {
-                File.Delete(userParams.FilePath);
-                UserEditParams.Remove((long)chatId);
                 await TelegramHelper.SendSystemMessage(
                     botClient: botClient,
                     update: update,
@@ -201,6 +160,8 @@ internal sealed class TelegramBot : ITelegramBot
                     message: ResponseSystemTextMessagesData.WrongAlgoritm,
                     type: SystemMessagesTypesEnum.Warning,
                     replyMessage: true);
+                File.Delete(userParams.FilePath);
+                UserEditParams.Remove((long)chatId);
                 return;
             }
         }
@@ -226,8 +187,6 @@ internal sealed class TelegramBot : ITelegramBot
         {
             if (userParams.FilePath is not null)
             {
-                File.Delete(userParams.FilePath);
-                UserEditParams.Remove((long)chatId);
                 await TelegramHelper.SendSystemMessage(
                     botClient: botClient,
                     update: update,
@@ -235,6 +194,8 @@ internal sealed class TelegramBot : ITelegramBot
                     message: ResponseSystemTextMessagesData.WrongAlgoritm,
                     type: SystemMessagesTypesEnum.Warning,
                     replyMessage: true);
+                File.Delete(userParams.FilePath);
+                UserEditParams.Remove((long)chatId);
                 return;
             }
         }
@@ -270,17 +231,16 @@ internal sealed class TelegramBot : ITelegramBot
             return;
         }
 
-        var hasProcess = UserEditParams.TryGetValue((long)chatId, out var checkUserParams);
-
         // Если нет активного процесса - создаем запись в словаре
-        if (!hasProcess && checkUserParams is null)
+        if (!UserEditParams.ContainsKey((long)chatId))
         {
             var newUserParams = new ImageEditingParamsModel { ChatId = chatId };
             UserEditParams.Add((long)chatId, newUserParams);
         }
 
         // Если есть активный процесс
-        if (UserEditParams.TryGetValue((long)chatId, out var userParams))
+        var hasProcess = UserEditParams.TryGetValue((long)chatId, out var userParams);
+        if (hasProcess && userParams is not null)
         {
             // Если есть группа файлов - выдаем ошибку, чистим запись
             if (update.Message?.MediaGroupId is not null)
@@ -297,6 +257,7 @@ internal sealed class TelegramBot : ITelegramBot
                         replyMessage: true);
                     return;
                 }
+
                 UserEditParams.Remove((long)chatId);
                 return;
             }
@@ -313,62 +274,76 @@ internal sealed class TelegramBot : ITelegramBot
                     replyMessage: true);
                 return;
             }
-        }
 
-        var document = update.Message?.Document;
-        // Если недопустимый формат - выдаем предупреждение
-        if (document?.MimeType is null || !document.MimeType.StartsWith("image/"))
-        {
-            await TelegramHelper.SendSystemMessage(
+
+            var document = update.Message?.Document;
+            // Если недопустимый формат - выдаем предупреждение
+            if (document?.MimeType is null || !document.MimeType.StartsWith("image/"))
+            {
+                await TelegramHelper.SendSystemMessage(
+                    botClient: botClient,
+                    update: update,
+                    cancellationToken: cancellationToken,
+                    message: ResponseSystemTextMessagesData.WrongFormat,
+                    type: SystemMessagesTypesEnum.Warning,
+                    replyMessage: true);
+
+                if (!string.IsNullOrEmpty(userParams?.FilePath)) File.Delete(userParams.FilePath);
+                UserEditParams.Remove((long)chatId);
+                return;
+            }
+
+            var filePath = FileHelper.CreateFilePath(document: document);
+
+            var res = await TelegramHelper.DownloadFileAndSave(
                 botClient: botClient,
                 update: update,
                 cancellationToken: cancellationToken,
-                message: ResponseSystemTextMessagesData.WrongFormat,
-                type: SystemMessagesTypesEnum.Warning,
-                replyMessage: true);
-            
-            if (!string.IsNullOrEmpty(userParams?.FilePath)) File.Delete(userParams.FilePath);
-            UserEditParams.Remove((long)chatId);
-            return;
-        }
-
-        var filePath = FileHelper.CreateFilePath(document: document);
-
-        var res = await TelegramHelper.DownloadFileAndSave(
-            botClient: botClient,
-            update: update,
-            cancellationToken: cancellationToken,
-            filePath: filePath,
-            fileId: document.FileId
-        );
-
-        if (res is null)
-        {
-            await TelegramHelper.SendSystemMessage(
-                botClient: botClient,
-                update: update,
-                cancellationToken: cancellationToken,
-                message: ResponseSystemTextMessagesData.FileSaveError,
-                type: SystemMessagesTypesEnum.Error,
-                replyMessage: true
+                filePath: filePath,
+                fileId: document.FileId
             );
-            if (!string.IsNullOrEmpty(userParams?.FilePath)) File.Delete(userParams.FilePath);
-            UserEditParams.Remove((long)chatId);
+
+            if (res is null)
+            {
+                await TelegramHelper.SendSystemMessage(
+                    botClient: botClient,
+                    update: update,
+                    cancellationToken: cancellationToken,
+                    message: ResponseSystemTextMessagesData.FileSaveError,
+                    type: SystemMessagesTypesEnum.Error,
+                    replyMessage: true
+                );
+                if (!string.IsNullOrEmpty(userParams.FilePath)) File.Delete(userParams.FilePath);
+                UserEditParams.Remove((long)chatId);
+            }
+
+            userParams.FilePath = filePath;
+
+            // Выдаем клавиатуру для выбора формата
+            var keyboardFormats = TelegramHelper.GetKeyboard(KeyboardTypesEnum.Format);
+            if (keyboardFormats is null)
+            {
+                await TelegramHelper.SendSystemMessage(
+                    botClient: botClient,
+                    update: update,
+                    cancellationToken: cancellationToken,
+                    message: ResponseSystemTextMessagesData.Error,
+                    type: SystemMessagesTypesEnum.Error,
+                    replyMessage: true
+                );
+                File.Delete(userParams.FilePath);
+                UserEditParams.Remove((long)chatId);
+            }
+
+            await TelegramHelper.SendKeyboardMessage(
+                botClient: botClient,
+                update: update,
+                cancellationToken: cancellationToken,
+                message:
+                "*Форматирование\\:* \nВыберите один из предложенных вариантов \n\n \u2757_Для отмены отправьте любое сообщение в чат_",
+                replyMessage: true,
+                markup: keyboardFormats);
         }
-
-        if (userParams is not null) userParams.FilePath = filePath;
-
-        // Выдаем клавиатуру для выбора формата
-        var keyboardFormats = TelegramHelper.GetKeyboard(KeyboardTypesEnum.Format);
-        if (keyboardFormats is null) return;
-        await TelegramHelper.SendKeyboardMessage(
-            botClient: botClient,
-            update: update,
-            cancellationToken: cancellationToken,
-            message:
-            "*Форматирование\\:* \nВыберите один из предложенных вариантов \n\n \u2757_Для отмены отправьте любое сообщение в чат_",
-            replyMessage: true,
-            markup: keyboardFormats);
     }
 
     private static async Task HandleQuery(
@@ -391,7 +366,7 @@ internal sealed class TelegramBot : ITelegramBot
             return;
         }
 
-        if (!UserEditParams.TryGetValue((long)chatId, out var settings))
+        if (!UserEditParams.TryGetValue((long)chatId, out var userParams))
         {
             await TelegramHelper.SendSystemMessage(
                 botClient: botClient,
@@ -405,7 +380,7 @@ internal sealed class TelegramBot : ITelegramBot
             return;
         }
 
-        if (settings.FilePath is null)
+        if (userParams.FilePath is null)
         {
             await TelegramHelper.SendSystemMessage(
                 botClient: botClient,
@@ -421,19 +396,31 @@ internal sealed class TelegramBot : ITelegramBot
 
         // Не выбрано параметров
         if (
-            settings.ChatId == chatId &&
-            !string.IsNullOrEmpty(settings.FilePath) &&
-            settings.ResultFormat is null &&
-            settings.CompressLevel is null
+            userParams.ChatId == chatId &&
+            !string.IsNullOrEmpty(userParams.FilePath) &&
+            userParams.ResultFormat is null &&
+            userParams.CompressLevel is null
         )
         {
             if (Enum.TryParse<FormatKeyboardEnum>(update.CallbackQuery?.Data, out var format))
             {
-                settings.ResultFormat = format;
+                userParams.ResultFormat = format;
                 
                 //отправляем клавиатуру степени сжатия
                 var keyboardQuality = TelegramHelper.GetKeyboard(KeyboardTypesEnum.Compression);
-                if (keyboardQuality is null) return;
+                if (keyboardQuality is null)
+                {
+                    await TelegramHelper.SendSystemMessage(
+                        botClient: botClient,
+                        update: update,
+                        cancellationToken: cancellationToken,
+                        message: ResponseSystemTextMessagesData.Error,
+                        type: SystemMessagesTypesEnum.Error,
+                        replyMessage: true
+                    );
+                    File.Delete(userParams.FilePath);
+                    UserEditParams.Remove((long)chatId);
+                }
                 var res = await TelegramHelper.SendKeyboardMessage(
                     botClient: botClient,
                     update: update,
@@ -453,20 +440,20 @@ internal sealed class TelegramBot : ITelegramBot
                     type: SystemMessagesTypesEnum.Error,
                     replyMessage: true
                 );
-                File.Delete(settings.FilePath);
+                File.Delete(userParams.FilePath);
                 UserEditParams.Remove((long)chatId);
             }
         }
         else if ( // выбран формат не выбран уровень сжатия
-                 settings.ChatId == chatId &&
-                 !string.IsNullOrEmpty(settings.FilePath) &&
-                 settings.ResultFormat is not null &&
-                 settings.CompressLevel is null
+                 userParams.ChatId == chatId &&
+                 !string.IsNullOrEmpty(userParams.FilePath) &&
+                 userParams.ResultFormat is not null &&
+                 userParams.CompressLevel is null
                 )
         {
             if (Enum.TryParse<CompressKeyboardEnum>(update.CallbackQuery?.Data, out var compress))
             {
-                settings.CompressLevel = compress;
+                userParams.CompressLevel = compress;
                 
                 // начинаем обработку файла
                 await TelegramHelper.SendSystemMessage(
@@ -488,7 +475,7 @@ internal sealed class TelegramBot : ITelegramBot
                     type: SystemMessagesTypesEnum.Error,
                     replyMessage: true
                 );
-                File.Delete(settings.FilePath);
+                File.Delete(userParams.FilePath);
                 UserEditParams.Remove((long)chatId);
             }
         }
@@ -503,12 +490,18 @@ internal sealed class TelegramBot : ITelegramBot
                 type: SystemMessagesTypesEnum.Error,
                 replyMessage: true
             );
-            File.Delete(settings.FilePath);
+            File.Delete(userParams.FilePath);
             UserEditParams.Remove((long)chatId);
         }
     }
+    
+    private static async Task ShowReadyInfo(ITelegramBotClient telegramBotClient)
+    {
+        var info = await telegramBotClient.GetMeAsync();
+        Console.WriteLine($"The Bot {info.Username} with ID {info.Id} is ready!");
+    }
 
-    public void CreateTelegramClientAndRun(string? telegramKey)
+    public async Task CreateTelegramClientAndRun(string? telegramKey)
     {
         if (telegramKey is null) return;
 
@@ -522,6 +515,6 @@ internal sealed class TelegramBot : ITelegramBot
             cancellationToken: ctx.Token
         );
 
-        ShowReadyInfo(telegramBotClient: telegramBotClient);
+        await ShowReadyInfo(telegramBotClient: telegramBotClient);
     }
 }
