@@ -3,6 +3,7 @@ using MinifyImagesBot_v2.Classes.Helpers;
 using MinifyImagesBot_v2.Data;
 using MinifyImagesBot_v2.Enums;
 using MinifyImagesBot_v2.Models;
+using Newtonsoft.Json;
 using Telegram.Bot;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Polling;
@@ -478,6 +479,15 @@ internal static class TelegramBot
                         type: SystemMessagesTypesEnum.Error,
                         replyMessage: true
                     );
+
+                    await TelegramHelper.SendFile(
+                        botClient: botClient,
+                        update: update,
+                        cancellationToken: cancellationToken,
+                        filePath: editingResult.FilePath!,
+                        caption: editingResult.FileInfoBefore.Length + " -> " + editingResult.FileInfoAfter?.Length
+                    );
+                    
                     File.Delete(userParams.FilePath);
                     if (editingResult.FilePath is not null) 
                         File.Delete(editingResult.FilePath);

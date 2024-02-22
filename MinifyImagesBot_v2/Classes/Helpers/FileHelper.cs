@@ -1,4 +1,6 @@
+using System.Diagnostics.CodeAnalysis;
 using ImageMagick;
+using MinifyImagesBot_v2.Models;
 using Telegram.Bot.Types;
 using File = System.IO.File;
 
@@ -16,12 +18,11 @@ internal static class FileHelper
         return Path.Combine(fileDir, $"{Guid.NewGuid()}{ext}");
     }
     
-    internal static string CreateEditingFilePath(MagickImage image)
+    internal static string CreateEditingFilePath(string ext)
     {
-        var ext = "." + image.Format;
         var fileDir = Path.Combine(CurrentDir, "Assets", "Images", "Formatted");
         if (!Directory.Exists(fileDir)) Directory.CreateDirectory(fileDir);
-        return Path.Combine(fileDir, $"{Guid.NewGuid()}{ext.ToLower()}");
+        return Path.Combine(fileDir, $"{Guid.NewGuid()}{ext}");
     }
 
     internal static string? GetGuideFilePath(string fileName)

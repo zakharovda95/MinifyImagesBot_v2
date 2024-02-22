@@ -20,7 +20,7 @@ internal class ImageEditor : IImageEditor
 
     private bool TryGetImageInfo([MaybeNullWhen(false)] out ImageInfoModel info, string? imagePath = null)
     {
-        if (!string.IsNullOrEmpty(imagePath) && !string.IsNullOrEmpty(_userParams.FilePath))
+        if (string.IsNullOrEmpty(imagePath) && string.IsNullOrEmpty(_userParams.FilePath))
         {
             info = null;
             return false;
@@ -28,6 +28,7 @@ internal class ImageEditor : IImageEditor
 
         var imageInfo = new MagickImageInfo(imagePath ?? _userParams.FilePath!);
         var fileInfo = new FileInfo(imagePath ?? _userParams.FilePath!);
+        fileInfo.Refresh();
         info = new ImageInfoModel
         {
             Format = imageInfo.Format,
@@ -41,38 +42,46 @@ internal class ImageEditor : IImageEditor
         return true;
     }
 
-    private ImageEditingResultModel HandlePng()
+    private ImageEditingResultModel HandlePng(ImageInfoModel info)
     {
         if (!string.IsNullOrEmpty(_userParams.FilePath))
         {
+            var path = "";
             if (_userParams.CompressLevel == CompressKeyboardEnum.MaxCompress)
             {
-                var settings = new MagickReadSettings
-                {
-                    Compression = CompressionMethod.ZipS,
-                    ColorType = ColorType.PaletteAlpha,
-                    Depth = 8
-                };
-
-                using var magik = new MagickImage(_userParams.FilePath, settings);
                 
-                magik.RemoveProfile("*"); // удаление всех мета
+                using var magik = new MagickImage(_userParams.FilePath);
+
+                magik.RemoveProfile("*");// удаление всех мета
                 magik.Strip();
-                magik.FilterType = FilterType.Lanczos2Sharp;
-                magik.Write(_userParams.FilePath);
+                magik.SetCompression(CompressionMethod.Zip);
+                magik.SetBitDepth(8);
+                magik.ClassType = ClassType.Pseudo;
+                //magik.ColorType = ColorType.Optimize;
+                magik.ColorSpace = ColorSpace.sRGB;
+                path = FileHelper.CreateEditingFilePath(info.Extension ?? ".png");
+                magik.Write(path);
             }
-            
-            return new ImageEditingResultModel { IsSuccess = true };
+
+            TryGetImageInfo(out var infoAfter, imagePath: path);
+            Console.WriteLine(infoAfter);
+            return new ImageEditingResultModel
+            {
+                IsSuccess = true, 
+                FilePath = path,
+                FileInfoBefore = info,
+                FileInfoAfter = infoAfter
+            };
         }
         return new ImageEditingResultModel { IsSuccess = false };
     }
 
-    private ImageEditingResultModel HandleJpgJpeg()
+    private ImageEditingResultModel HandleJpgJpeg(ImageInfoModel info)
     {
         return new ImageEditingResultModel { IsSuccess = true };
     }
 
-    private ImageEditingResultModel HandleHeic()
+    private ImageEditingResultModel HandleHeic(ImageInfoModel info)
     {
         return new ImageEditingResultModel { IsSuccess = true };
     }
@@ -89,13 +98,13 @@ internal class ImageEditor : IImageEditor
         switch (format)
         {
             case AvailableFormatsEnum.Png:
-               return HandlePng();
+               return HandlePng(info);
             case AvailableFormatsEnum.Jpeg:
-                return HandleJpgJpeg();
+                return HandleJpgJpeg(info);
             case AvailableFormatsEnum.Jpg:
-                return HandleJpgJpeg();
+                return HandleJpgJpeg(info);
             case AvailableFormatsEnum.Heic:
-                return HandleHeic();
+                return HandleHeic(info);
             case AvailableFormatsEnum.Webp:
             default: return new ImageEditingResultModel { IsSuccess = false };
         }
