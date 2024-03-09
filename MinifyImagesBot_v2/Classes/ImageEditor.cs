@@ -20,60 +20,13 @@ internal class ImageEditor : IImageEditor
 
     private bool TryGetImageInfo([MaybeNullWhen(false)] out ImageInfoModel info, string? imagePath = null)
     {
-        if (string.IsNullOrEmpty(imagePath) && string.IsNullOrEmpty(_userParams.FilePath))
-        {
-            info = null;
-            return false;
-        }
-
-        var imageInfo = new MagickImageInfo(imagePath ?? _userParams.FilePath!);
-        var fileInfo = new FileInfo(imagePath ?? _userParams.FilePath!);
-        fileInfo.Refresh();
-        info = new ImageInfoModel
-        {
-            Format = imageInfo.Format,
-            Density = imageInfo.Density,
-            Quality = imageInfo.Quality,
-            Compression = imageInfo.Compression,
-            Interlace = imageInfo.Interlace,
-            Length = fileInfo.Length / 1000 + "kB",
-            Extension = fileInfo.Extension,
-        };
+        info = new ImageInfoModel();
         return true;
     }
 
     private ImageEditingResultModel HandlePng(ImageInfoModel info)
     {
-        if (!string.IsNullOrEmpty(_userParams.FilePath))
-        {
-            var path = "";
-            if (_userParams.CompressLevel == CompressKeyboardEnum.MaxCompress)
-            {
-                
-                using var magik = new MagickImage(_userParams.FilePath);
-
-                magik.RemoveProfile("*");// удаление всех мета
-                magik.Strip();
-                magik.SetCompression(CompressionMethod.Zip);
-                magik.SetBitDepth(8);
-                magik.ClassType = ClassType.Pseudo;
-                //magik.ColorType = ColorType.Optimize;
-                magik.ColorSpace = ColorSpace.sRGB;
-                path = FileHelper.CreateEditingFilePath(info.Extension ?? ".png");
-                magik.Write(path);
-            }
-
-            TryGetImageInfo(out var infoAfter, imagePath: path);
-            Console.WriteLine(infoAfter);
-            return new ImageEditingResultModel
-            {
-                IsSuccess = true, 
-                FilePath = path,
-                FileInfoBefore = info,
-                FileInfoAfter = infoAfter
-            };
-        }
-        return new ImageEditingResultModel { IsSuccess = false };
+        return new ImageEditingResultModel { IsSuccess = true };
     }
 
     private ImageEditingResultModel HandleJpgJpeg(ImageInfoModel info)

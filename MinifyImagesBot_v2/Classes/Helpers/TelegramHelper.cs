@@ -262,8 +262,7 @@ internal static class TelegramHelper
                 {
                     new[]
                     {
-                        InlineKeyboardButton.WithCallbackData(CompressKeyboardEnum.MaxCompress.GetDisplayName(), CompressKeyboardEnum.MaxCompress.ToString()),
-                        InlineKeyboardButton.WithCallbackData(CompressKeyboardEnum.MinCompress.GetDisplayName(), CompressKeyboardEnum.MinCompress.ToString()),
+                        InlineKeyboardButton.WithCallbackData(CompressKeyboardEnum.WithCompress.GetDisplayName(), CompressKeyboardEnum.WithCompress.ToString()),
                     },
                     new[]
                     {

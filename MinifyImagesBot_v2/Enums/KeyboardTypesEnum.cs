@@ -18,10 +18,8 @@ internal enum FormatKeyboardEnum
 
 internal enum CompressKeyboardEnum
 {
-    [Display(Name = "Максимальное сжатие")]
-    MaxCompress,
-    [Display(Name = "Щадящее сжатие")]
-    MinCompress,
+    [Display(Name = "C дополнительным сжатием")]
+    WithCompress,
     [Display(Name = "Без сжатия")]
     None,
 }
